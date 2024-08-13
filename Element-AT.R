@@ -50,7 +50,7 @@ big_table <- read.csv("//deqlab1/Assessment/Air Toxics/Annual Air Toxics Summari
 
 # Joins the table to the element table matching the Analyte column in the Element doc table to the 
 # analyte_name_deq column in the Big Table
-Elem <- left_join(Elem, big_table, by = c("Analyte" = "analyte_name_deq"))
+Elem <- left_join(Elem, big_table, by = c("Analyte" = "analyte_name_deq", "SpecificMethod" = "SpecificMethod"))
 
 #Convert the units to ug_m3.  Apply to Units column.  
 Elem$uResult <- ifelse(
@@ -75,7 +75,7 @@ Elem[with(Elem, order("Project", "Sampled", "SpecificMethod", "Analyte")), ]
 # Remove rows with specific criteria, ex. Blanks
 # Elem <- Elem[!(Elem$ClientMatrix=="PM 10 - HV" | Elem$sampletype=="Blank - Equipment"),]
  Elem <- Elem[!(Elem$sampletype=="Pre-deployment Check" | Elem$Project=="Special Projects" | Elem$Project=="Sample Media Lot Blanks"),]
- Elem <- Elem[!(Elem$Project=="Predeployment Equipment Check" | Elem$Project=="Project"),]
+ Elem <- Elem[!(Elem$Project=="Predeployment Equipment Check" | Elem$Project=="Project" | Elem$sampletype=="Blank - Equipment"),]
  Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
 
 # Make new value named "Location" from the column named "Project" and choose one or multiple sites (with CTRL or Shift)
@@ -112,6 +112,10 @@ i <- menu(Legend, graphics = TRUE, title = "Reference Color?")
 
 legend <- Legend[i]
 Test2 <- unique(Elem[[i]])
+
+Elem %>%
+  group_by(sampletype) %>%
+  summarize(n = n())
 
 # Uncomment next line if you want to save graphs
 # drnm <- choose.dir(default = "", caption = "Select folder")
