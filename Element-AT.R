@@ -189,3 +189,5 @@ location +
 # savefile = paste(drnm, flnm, sep = "\\")
 # fltp <- paste(savefile, "jpg", sep = ".")
 # ggsave(fltp, units = c("cm"), width = 30, height = 16, device='jpg', dpi=700)
+
+# For data completeness, add capability for multiple years, multiple sites and multiple specific methods
