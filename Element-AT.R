@@ -1,8 +1,5 @@
-# Data Analysis tool for data pulled from the Element EDD "BLDR:Excel-Simple" format. 
-# This could easily be adjusted to fit another EDD format.
-# Change the working directory to fit your computer's R-workflow
-# A lot of the data is in character format, which you can check using "class()"
-# Ex. class(Elem$Sampled) --- See below for converting this to the proper format
+# Pull big table from Repo to here. Some Tiers are not following all the way through.
+# Maybe bind big table just before graphs or just before Elem3 defs
 
 library(ggplot2)
 library(lubridate)
@@ -15,21 +12,14 @@ library(zoo)
 library(tidyverse)
 library(readxl)
 library(RAQSAPI)
+library(tcltk)
 
-# Sets Working Directory
-setwd("S:/Air Toxics/Air Toxics 12-24")
-
-<<<<<<< Updated upstream
 # Choose xls file for analysis. Defaults to working directory. This is specifically for xls format.
-fileIn <- file.choose(new = FALSE)
+# fileIn <- file.choose(new = FALSE)
 
 # Pull from excel data and make dataframe (df) named, in this case,  Elem2. You can change this 
 # to read csv or xlsx format
-Elem2 <- read_xls(paste0(fileIn), col_names = TRUE, na = c("void", "VOID"), col_types = NULL)
-=======
-# Pull in .csv files. For the 2022 air toxics report, these are the 2022 Air Toxics.csv file and the 
-# Big_table.csv (cross tables).
-big_table <- read.csv("//deqlab1/Assessment/Air Toxics/Annual Air Toxics Summaries/2022 Air Toxics Monitoring Summary/R Scripts/AT/Supporting Tables/Big_Table_Ben.csv")
+# Elem2 <- read_xls(paste0(fileIn), col_names = TRUE, na = c("void", "VOID"), col_types = NULL)
 
 #########################################
 #########################################
@@ -71,26 +61,31 @@ big_table <- read.csv("//deqlab1/Assessment/Air Toxics/Annual Air Toxics Summari
 # Elem2 <- read_xls(paste0(fileIn), col_names = TRUE, na = c("void", "VOID"), col_types = NULL)
  
 # Choose all csv files from Repository DB located in the Data folder of the working directory
-lfiles <- list.files("./Data/", pattern = "*.csv", full.names = TRUE)
-atlist <- vector("list", length(lfiles))
-n <- 1
-for (f in lfiles) {
-    df <- read.csv(f, stringsAsFactors = FALSE)[,-1]
+# lfiles <- list.files("./Data/", pattern = "*.csv", full.names = TRUE)
+# atlist <- vector("list", length(lfiles))
+# n <- 1
+# for (f in lfiles) {
+#     df <- read.csv(f, stringsAsFactors = FALSE)[,-1]
+# 
+#     atlist[[n]] <- df
+#     n <- n+1
+# }
+# 
+#  Elem2 <- bind_rows(atlist)
+#  Elem2 <- Elem2 %>% select(!(...36))
 
-    atlist[[n]] <- df
-    n <- n+1
-}
+source("//deqlab1/bayres/R/Projects/R Training/RepositoryPull.R")
+# source("//deqlab1/bayres/R/Projects/R Training/RepositoryUpdate.R")
 
- Elem2 <- bind_rows(atlist)
-# Elem2 <- Elem2 %>% select(!(...36))
->>>>>>> Stashed changes
+save.image("E:/R/Projects/R Training/all_data.RData")
+
+ # Sets Working Directory
+setwd("S:/Air Toxics/Air Toxics 12-24/")
 
 # Make a copy and work from. Start here if there is a mistake in the below coding.
-Elem <- Elem2
+Elem <- Repo
 
-<<<<<<< Updated upstream
-#class(Elem$tResult)
-=======
+# class(Elem$tResult)
 # Filters to remove duplicate rows, Voided samples and comments
 Elem <- Elem %>% distinct()
 Elem <- Elem[!grepl("Void", Elem$Result),]
@@ -105,30 +100,9 @@ Elem <- Elem[!grepl("Acetone", Elem$Analyte),]
 Elem <- Elem[!grepl("Isopropanol", Elem$Analyte),]
 Elem <- Elem[!grepl("n-Hexane", Elem$Analyte),]
 Elem <- Elem[!grepl("pptv", Elem$Units),]
-
-#class(Elem$Result)
->>>>>>> Stashed changes
-#class(Elem$Sampled)
-
-# Result is a character. This makes it a number
-Elem$Result <- as.numeric(Elem$Result)
-Elem$uResult <- Elem$Result
-
-# Element spits out the column "sampled," which is a character. This makes it a date in local time (POSIXct 
-# in this case)
-<<<<<<< Updated upstream
-Elem$Sampled <- format(mdy(Elem$Sampled),
-                       format = "%m/%d/%Y")
-Elem$Sampled <- as.POSIXct(Elem$Sampled, tz = "GMT", format = "%m/%d/%Y")
-
-#class(Elem$tResult)
-#class(Elem$Sampled)
-=======
- Elem$Sampled <- format(ymd(Elem$Sampled),
-                        format = "%Y-%m-%d ")
- Elem$Sampled <- as.POSIXct(Elem$Sampled, tz = "GMT", format = "%Y-%m-%d")
-
-# Elem$Sampled <- parse_date_time(Elem$Sampled, orders = c('mdy', 'dmy', 'mdy_HM', 'mdy_HMS', '%m/%d/%Y %I:%M:%S'))
+Elem <- Elem[!grepl("Speciation", Elem$Matrix),]
+Elem <- Elem[!grepl("XRF", Elem$Analysis),]
+Elem <- Elem[!grepl("Southeast Lafayette", Elem$Project),]
 
 Elem$Yr <- year(Elem$Sampled)
 
@@ -136,70 +110,26 @@ Elem <- Elem %>%
           mutate(qtr = quarter(Sampled, with_year = T)) %>%
           arrange(Sampled, Project, SpecificMethod, Analyte)
 
-# class(Elem$Result)
-# class(Elem$Sampled)
->>>>>>> Stashed changes
+# Remove data below B grade
+Elem <- Elem[!grepl("C|D|F", Elem$DQL),]
 
-# Elem <- separate_wider_delim(Elem, cols = LabNumber, delim = "-", names = c("WO", "LabNumber"))
-# Elem$WO <- as.numeric(Elem$WO)
-# Elem$LabNumber <- as.numeric(Elem$LabNumber)
-
-# Make a duplicate df to work with for conversions to ug/m3
-# Elem$uResult <- Elem$Result
-
-# Joins the table to the element table matching the Analyte column in the Element doc table to the 
-# analyte_name_deq column in the Big Table
-big_table <- big_table %>%
-  select('analyte_name_deq', 'SpecificMethod', 'Tier')
-Elem <- left_join(Elem, big_table, by = c("Analyte" = "analyte_name_deq", "SpecificMethod" = "SpecificMethod"))
-
-
-#Convert the units to ug_m3.  Apply to Units column.  
-Elem$uResult <- ifelse(
-  Elem$Units %in% c("ng/m³ STP", "ng/m³ LTP"),
-  Elem$Result / 1000,
-  ifelse(
-    Elem$Units == "ppbv",
-    Elem$Result * (Elem$mol_weight_g_mol) / 24.45,
-    Elem$Result
-  )
-)
-
-Elem <- Elem %>% 
-  mutate(AnQual = AnalyteQualifiers) %>%
-      separate(AnQual, c("x1", "x2", "x3", "x4", "x5", "x6", "x7", "x8"), sep = "(\\,|::)")
-
-Elem <- Elem[!grepl("C|D|F", Elem$x2),]
-Elem <- Elem[!grepl("C|D|F", Elem$x4),]
-Elem <- Elem[!grepl("C|D|F", Elem$x6),]
-
-Elem <- Elem %>% 
-  mutate(SampQual = SampleQualifiers) %>%
-      separate(SampQual, c("y1", "y2", "y3", "y4", "y5", "y6", "y7", "y8"), sep = "(\\,|::)")
-
-Elem <- Elem[!grepl("C|D|F", Elem$y2),]
-Elem <- Elem[!grepl("C|D|F", Elem$y4),]
-Elem <- Elem[!grepl("C|D|F", Elem$y6),]
-
-Elem <- Elem %>% select(-(last_col(offset = 15):last_col()))
-
-#############################################
-#############################################
-#Use the above loop to make seasonal entries#
-#############################################
-#############################################
-
-# Sort the data 
-# Elem[with(Elem, order("Project", "Sampled", "SpecificMethod", "Analyte")), ]
 
 # Remove rows with specific criteria, ex. Blanks
-# Elem <- Elem[!(Elem$ClientMatrix=="PM 10 - HV" | Elem$SampleType=="Blank - Equipment"),]
  Elem <- Elem[!(Elem$SampleType=="Pre-deployment Check" | Elem$Project=="Special Projects" | Elem$Project=="Sample Media Lot Blanks"),]
  Elem <- Elem[!(Elem$Project=="Predeployment Equipment Check" | Elem$Project=="Project" | Elem$SampleType=="Blank - Equipment"),]
  Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
+ 
+ Elem2 <- Elem
+ Elem <- Elem2
 
 # Make new value named "Location" from the column named "Project" and choose one or multiple sites (with CTRL or Shift)
 # Assign integer values to the locations (sites) you chose
+YrRange <- as.character(unique(Elem$Yr))
+v <- select.list(YrRange, preselect = NULL, multiple = T, title = "Date Range? Hold Shift or Ctrl for multiple", graphics = TRUE)
+
+Elem <- Elem[Elem$Yr %in% v,]
+Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
+ 
 Location <- unique(Elem$Project)
 x <- select.list(Location, preselect = NULL, multiple = T, title = "Locations? Hold SHIFT or CTRL for multiple",  graphics = TRUE)
 
@@ -218,6 +148,14 @@ y <- select.list(Method, preselect = NULL, multiple = T, title = "Method? Hold S
 Elem <- Elem[Elem$SpecificMethod %in% y,]
 Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
 
+# Pick Tiers of data to be used
+HAPTier <- unique(Elem$Tier)
+w <- select.list(HAPTier, preselect = NULL, multiple = T, title = "Tier? Hold SHIFT or CTRL for multiple", graphics = TRUE)
+
+# Remove all data that are NOT in the Tier class chosen
+Elem <- Elem[Elem$Tier %in% w,]
+Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
+
 # Make new value named "Pollutant" from the column named "Analyte" and choose multiple pollutants (with CTRL or Shift)
 Pollutant <- unique(Elem$Analyte)
 z <- select.list(Pollutant, preselect = NULL, multiple = T, title = "Pollutant? Hold SHIFT or CTRL for multiple",  graphics = TRUE)
@@ -230,57 +168,120 @@ Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
 Legend <- colnames(Elem)
 i <- menu(Legend, graphics = TRUE, title = "Reference Color?")
 
-<<<<<<< Updated upstream
 legend <- Legend[i]
 Test2 <- unique(Elem[[i]])
 
+Elem3 <- Elem
+
+Elem3$CancerRisk = Elem3$uResult/Elem3$Cancer_Risk_ABC*100
+Elem3$NonCancerRisk = Elem3$uResult/Elem3$NonCancer_Risk_ABC*100
+Elem3$AcuteNonCancerRisk = Elem3$uResult/Elem3$Acute_NonCancer_Risk_ABC*100
+
+
+
 Elem %>%
-  group_by(sampletype) %>%
+  group_by(SampleType) %>%
   summarize(n = n())
-=======
 # legend <- Legend[i]
 # Test2 <- unique(Elem[[i]])
 
-# Take month/year and expected number of samples
->>>>>>> Stashed changes
+yrsamp <- (unique(year(Elem3$Sampled)))
+yrfirst <- as.character(yrsamp[1])
+yrfinal <- as.character(yrsamp[length(yrsamp)])
+tiern <- as.character(Elem3$Tier[1])
 
-# Uncomment next line if you want to save graphs
-# drnm <- choose.dir(default = "", caption = "Select folder")
+# Calculate Annual average
+Elem4 <- Elem3 %>%
+  group_by(Project, Yr, Analyte, Cancer_Risk_ABC, NonCancer_Risk_ABC) %>%
+  summarize(mean = mean(uResult, na.rm=T))
+
+# Take month/year and expected number of samples
+
+ggplot(Elem4, aes(Yr, mean, colour = interaction(Project, Analyte))) + geom_point(size = 2)
 
 # Uncomment for box/whisker graph
-<<<<<<< Updated upstream
-location <- ggplot(Elem, aes(x = Analyte, y = uResult, fill = Elem[[i]])) +
-  ggtitle("KPM Determination") +
-=======
-whisplot <- ggplot(Elem, aes(x = Analyte, y = uResult, fill = Elem[[i]]))
-whisplot +
-  ggtitle(z) +
->>>>>>> Stashed changes
+#location <- ggplot(Elem, aes(x = Analyte, y = uResult, fill = Elem[[i]])) +
+#  ggtitle("KPM Determination")
+whisplot1 <- ggplot(Elem3, aes(x = Analyte, y = CancerRisk, fill = Elem3[[i]]))
+whisplot1 +
+  ggtitle(paste("Tier", tiern, "HAP \nCancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
   theme(panel.background = element_rect(fill = 'white'),
         panel.grid.major = element_line(color = 'grey'),
         panel.grid.minor = element_line(color = 'grey'),
-        title = element_text(size = 24),
-        axis.text.x=element_text(angle=45, hjust=1, face = "bold", size = "24"),
-        axis.text.y=element_text(size = "24", face = "bold"),
-        axis.title=element_text(size=24,face="bold"),
-        legend.position="right") +
+        title = element_text(size = 16),
+        axis.text.x=element_text(angle=45, hjust=1, face = "bold", size = "16"),
+        axis.text.y=element_text(size = "16", face = "bold"),
+        axis.title=element_text(size=16,face="bold"),
+        legend.position="right") + 
+  guides(fill=guide_legend(title=legend)) +
   xlab("Analyte") +
-  #ylab(location$data$Units) +
-  ylab(expression(paste(mu,g/m^3))) +
+  ylab(bquote('% risk of'~10^6)) +
+  #ylab(expression(paste(mu,g/m^3))) +
   # Create boxplot chart in ggplot2
-  geom_boxplot(outlier.colour = "black", outlier.fill = "black", outlier.size = 4) #+
-  facet_wrap(~ Project)
+  geom_boxplot(outlier.colour = "black", outlier.fill = "black", outlier.size = 4) + 
+  facet_wrap(~Project)
+  
+# drnm <- tclvalue(tkchooseDirectory())
+# flnm <- paste("Tier", tiern, "CR")
+# savefile = paste(drnm, flnm, sep = "/")
+# fltp <- paste(savefile, "pdf", sep = ".")
+# ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
+
+# geom_hline(yintercept=c(0.00023), linetype='solid', color=c('orange'), size = 2) + 
+  # geom_hline(yintercept=c(0.00008), linetype='solid', color=c('red'), size = 2) 
+#location +
   # geom_hline(yintercept=Elem$NonCancer_Risk_ABC, colour = 'red', size = 2)
+whisplot2 <- ggplot(Elem3, aes(x = Analyte, y = NonCancerRisk, fill = Elem3[[i]]))
+whisplot2 +
+  ggtitle(paste("Tier", tiern, "HAP \nNon-Cancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
+  theme(panel.background = element_rect(fill = 'white'),
+        panel.grid.major = element_line(color = 'grey'),
+        panel.grid.minor = element_line(color = 'grey'),
+        title = element_text(size = 16),
+        axis.text.x=element_text(angle=45, hjust=1, face = "bold", size = "16"),
+        axis.text.y=element_text(size = "16", face = "bold"),
+        axis.title=element_text(size=16,face="bold"),
+        legend.position="right") + 
+  guides(fill=guide_legend(title=legend)) +
+  xlab("Analyte") +
+  ylab(bquote('% risk of'~10^6)) +
+  #ylab(expression(paste(mu,g/m^3))) +
+  # Create boxplot chart in ggplot2
+  geom_boxplot(outlier.colour = "black", outlier.fill = "black", outlier.size = 4) 
 
-<<<<<<< Updated upstream
-=======
+# flnm <- paste("Tier", tiern, "NC")
+# savefile = paste(drnm, flnm, sep = "/")
+# fltp <- paste(savefile, "pdf", sep = ".")
+# ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
 
->>>>>>> Stashed changes
-# Add horizontal lines for TRVs See \\deqlab1\AQM\Air Toxics\Benchmarks\340-245-8010.pdf for those TRV
-# location #+
-  # guides(fill=guide_legend(title="Analyte"))
+whisplot3 <- ggplot(Elem3, aes(x = Analyte, y = AcuteNonCancerRisk, fill = Elem3[[i]]))
+whisplot3 +
+  ggtitle(paste("Tier", tiern, "HAP \nAcute Non-Cancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
+  theme(panel.background = element_rect(fill = 'white'),
+        panel.grid.major = element_line(color = 'grey'),
+        panel.grid.minor = element_line(color = 'grey'),
+        title = element_text(size = 16),
+        axis.text.x=element_text(angle=45, hjust=1, face = "bold", size = "16"),
+        axis.text.y=element_text(size = "16", face = "bold"),
+        axis.title=element_text(size=16,face="bold"),
+        legend.position="right") + 
+  guides(fill=guide_legend(title=legend)) +
+  xlab("Analyte") +
+  ylab(bquote('% risk of'~10^6)) +
+  #ylab(expression(paste(mu,g/m^3))) +
+  # Create boxplot chart in ggplot2
+  geom_boxplot(outlier.colour = "black", outlier.fill = "black", outlier.size = 4)
 
-  # geom_hline(yintercept=Elem$NonCancer_Risk_ABC, colour='blue', size = 2) #+
+# flnm <- paste("Tier", tiern, "Ac")
+# savefile = paste(drnm, flnm, sep = "/")
+# fltp <- paste(savefile, "pdf", sep = ".")
+# ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
+
+  # Add horizontal lines for TRVs See \\deqlab1\AQM\Air Toxics\Benchmarks\340-245-8010.pdf for those TRV
+# location <- ggplot(Elem, aes(x = Analyte, y = uResult, fill = Elem[[i]])) +
+#  location #+
+#  guides(fill=guide_legend(title="Analyte"))
+
   # geom_hline(yintercept=c(100), linetype='solid', color=c('orange'), size = 2) +
   # geom_hline(yintercept=c(180), linetype='solid', color=c('purple'), size = 2) +
   # geom_hline(yintercept=c(46), linetype='solid', color=c('yellow'), size = 2) +
@@ -294,45 +295,105 @@ whisplot +
 # Uncomment below line if you want to save graphs
 #flnm <- dlgInput("SaveAs...", Sys.info()["filename"])$res
 #savefile = paste(drnm, flnm, sep = "\\")
-#fltp <- paste(savefile, "jpg", sep = ".")
-#ggsave(fltp, units = c("cm"), width = 90, height = 48, device='jpg', dpi=700)
+#fltp <- paste(savefile, "pdf", sep = ".")
+#ggsave(fltp, units = c("cm"), width = 90, height = 48, device='pdf', dpi=700)
 # imported from previous version and will work on next:
 #############################################################################
 # STOP HERE FOR BOX-WHISKER PLOT
 
 # Uncomment for simple time vs concentration graph. uResult is all in micrograms. Result is in the reportable units like ppbv
-pointplot <- ggplot(Elem)
-# location <- ggplot(Elem, aes(Sampled, Result))
 
-<<<<<<< Updated upstream
-location +
-  ggtitle(x) +
-  #geom_point(data = Elem, aes(Sampled, tResult, colour = Elem[[i]]), size = 4) +
-  geom_point(data = Elem, aes(Sampled, uResult, group = Elem[[i]], colour = Elem[[i]]), size = 4) +
-  scale_color_discrete(name = legend) +
-=======
-pointplot +
-  geom_point(data = Elem, aes(Sampled, uResult, colour = Elem[[i]]), size = 4) +
->>>>>>> Stashed changes
-  theme(axis.text.x=element_text(angle=45, hjust=1, face = "bold", size = "12"), axis.text.y=element_text(size = "12", face = "bold"), axis.title=element_text(size=14,face="bold")) +
+pointplot <- ggplot(Elem3, aes(Sampled, uResult, colour = Analyte))
+pointplot + geom_point(size = 2) + facet_wrap(~Elem3[[i]]) +
+  ggtitle(paste("Tier", tiern, "HAP \nTime Series"), subtitle = paste(yrfirst,"-",yrfinal)) +
+  theme(panel.background = element_rect(fill = 'white'),
+        panel.grid.major = element_line(color = 'grey'),
+        panel.grid.minor = element_line(color = 'grey'),
+        title = element_text(size = 16),
+        axis.text.x=element_text(angle=45, hjust=1, face = "bold", size = "16"),
+        axis.text.y=element_text(size = "16", face = "bold"),
+        axis.title=element_text(size=16,face="bold"),
+        legend.position="right") +
   xlab("Sampling Day") +
-  ggtitle(x) +
   ylab(expression(paste(mu,g/m^3))) + 
-  guides(col= guide_legend(title= Legend[[i]])) #+
-  # geom_hline(yintercept=Elem$Cancer_Risk_ABC, colour = 'red', size = 2) +
-  # geom_hline(yintercept=Elem$NonCancer_Risk_ABC, colour='blue', size = 2) +
-  # geom_hline(yintercept=Elem$Acute_NonCancer_Risk_ABC, linetype='solid', color=c('yellow'), size = 2) #+
-  # geom_hline(yintercept=c(41), linetype='solid', color=c('black'), size = 2) +
-  # geom_hline(yintercept=c(100), linetype='solid', color=c('orange'), size = 2) +
-  # geom_hline(yintercept=c(180), linetype='solid', color=c('green'), size = 2) +
-  # geom_hline(yintercept=c(180), linetype='solid', color=c('purple'), size = 2) 
+  guides(fill=guide_legend(title=legend))
 
+# flnm <- paste("Tier", tiern, "TimeSeries")
+# savefile = paste(drnm, flnm, sep = "/")
+# fltp <- paste(savefile, "pdf", sep = ".")
+# ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
+
+Annual <- Elem3 %>% group_by(Project, Analyte, Yr, Cancer_Risk_ABC, NonCancer_Risk_ABC, Acute_NonCancer_Risk_ABC) %>% summarise(mean(uResult))
+
+AnCR <- ggplot(Annual, aes(Yr, `mean(uResult)`, color = Analyte)) + geom_point(size = 2) + facet_wrap(~Project) +
+  geom_hline(aes(yintercept=Cancer_Risk_ABC, colour=Analyte), linewidth = 1) +
+  scale_x_continuous(limits = c(2013, 2025), breaks = c(2013, 2015, 2017, 2019, 2021, 2023, 2025)) +
+  ggtitle(paste("Tier", tiern, "Annual Cancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
+  theme(panel.background = element_rect(fill = 'white'),
+        panel.grid.major = element_line(color = 'grey'),
+        panel.grid.minor = element_line(color = 'grey'),
+        title = element_text(size = 16),
+        axis.text.x=element_text(angle=45, hjust=1, face = "bold", size = "16"),
+        axis.text.y=element_text(size = "16", face = "bold"),
+        axis.title=element_text(size=16,face="bold"),
+        legend.position="right") +
+  ylim(0,10) +
+  xlab("Sampling Day") +
+  ylab(expression(paste(mu,g/m^3))) + 
+  guides(fill=guide_legend(title=legend))
+AnCR
+
+# flnm <- paste("Tier", tiern, "Annual CR")
+# savefile = paste(drnm, flnm, sep = "/")
+# fltp <- paste(savefile, "pdf", sep = ".")
+# ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
+
+AnNC <- ggplot(Annual, aes(Yr, `mean(uResult)`, color = Analyte)) + geom_point(size = 2) + facet_wrap(~Project) +
+  geom_hline(aes(yintercept=NonCancer_Risk_ABC, colour=Analyte), linewidth = 1) +
+  scale_x_continuous(limits = c(2013, 2025), breaks = c(2013, 2015, 2017, 2019, 2021, 2023, 2025)) +
+  ggtitle(paste("Tier", tiern, "Annual Non-Cancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
+  theme(panel.background = element_rect(fill = 'white'),
+        panel.grid.major = element_line(color = 'grey'),
+        panel.grid.minor = element_line(color = 'grey'),
+        title = element_text(size = 16),
+        axis.text.x=element_text(angle=45, hjust=1, face = "bold", size = "16"),
+        axis.text.y=element_text(size = "16", face = "bold"),
+        axis.title=element_text(size=16,face="bold"),
+        legend.position="right") +
+  ylim(0,10) +
+  xlab("Sampling Day") +
+  ylab(expression(paste(mu,g/m^3))) + 
+  guides(fill=guide_legend(title=legend))
+AnNC
+
+# flnm <- paste("Tier", tiern, "Annual NC")
+# savefile = paste(drnm, flnm, sep = "/")
+# fltp <- paste(savefile, "pdf", sep = ".")
+# ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
+
+AnAc <- ggplot(Annual, aes(Yr, `mean(uResult)`, color = Analyte)) + geom_point(size = 2) + facet_wrap(~Project) +
+  geom_hline(aes(yintercept=Acute_NonCancer_Risk_ABC, colour=Analyte), linewidth = 1) +
+  scale_x_continuous(limits = c(2010, 2025), breaks = c(2010, 2015, 2020, 2025)) +
+  ggtitle(paste("Tier", tiern, "Annual Acute Non-Cancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
+  theme(panel.background = element_rect(fill = 'white'),
+        panel.grid.major = element_line(color = 'grey'),
+        panel.grid.minor = element_line(color = 'grey'),
+        title = element_text(size = 16),
+        axis.text.x=element_text(angle=45, hjust=1, face = "bold", size = "16"),
+        axis.text.y=element_text(size = "16", face = "bold"),
+        axis.title=element_text(size=16,face="bold"),
+        legend.position="right") +
+  ylim(0,10) +
+  xlab("Sampling Day") +
+  ylab(expression(paste(mu,g/m^3))) + 
+  guides(fill=guide_legend(title=legend))
+AnAc
 
 # Uncomment below line if you want to  save graphs
-# flnm <- dlgInput("SaveAs...", Sys.info()["filename"])$res
-# savefile = paste(drnm, flnm, sep = "\\")
-# fltp <- paste(savefile, "jpg", sep = ".")
-# ggsave(fltp, units = c("cm"), width = 30, height = 16, device='jpg', dpi=700)
+# flnm <- paste("Tier", tiern, "Annual Ac")
+# savefile = paste(drnm, flnm, sep = "/")
+# fltp <- paste(savefile, "pdf", sep = ".")
+# ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
 
 # For data completeness, add capability for multiple years, multiple sites and multiple specific methods
 setwd("E:/R/Projects/R Training")
