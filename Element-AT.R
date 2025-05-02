@@ -14,76 +14,19 @@ library(readxl)
 library(RAQSAPI)
 library(tcltk)
 
-# Choose xls file for analysis. Defaults to working directory. This is specifically for xls format.
-# fileIn <- file.choose(new = FALSE)
+DLData <- c("REPO", "AQS", "XLS")
+d <- select.list(DLData, graphics = TRUE, multiple = FALSE)
 
-# Pull from excel data and make dataframe (df) named, in this case,  Elem2. You can change this 
-# to read csv or xlsx format
-# Elem2 <- read_xls(paste0(fileIn), col_names = TRUE, na = c("void", "VOID"), col_types = NULL)
+setwd("E:/R/Projects/R Training/")
 
-#########################################
-#########################################
-#Need loop for getting AQS data from AQS#
-#########################################
-#########################################
-
-# source("S:/RATSorganizing/computer_scripts_tools/R/in_development/aqs_envista_query/pass/pass2.r")
-# aqs_credentials(FocusEmail, FocusPass)
-
- # toxlist <- vector("list", 2)
- # m <- 20160101
- # n <- 20161231
- # o <- 1
- # test <- unique(big_table$EPA_Parameter_Code)
- # 
- # Elem <- for (t in test) {
- #   if (m > 20170100 | n < 20171232) {
- #     test <- test[!grepl(17141, test)]
- #     Elem2 <- aqs_sampledata_by_state(t, m, n, "41", return_header = FALSE)
- #   }
- #   else {
- #       test <- unique(big_table$EPA_Parameter_Code)
- #       Elem2 <- aqs_sampledata_by_state(t, m, n, "41", return_header = FALSE)
- # }
- # 
- #   toxlist[[o]] <- Elem2
- #   m <- m+10000
- #   n <- n+10000
- #   o <- o+1
- # 
- # }
- # 
- # Elem2 <- dplyr::bind_rows(toxlist)
-
-# Choose single xls file from Element. Defaults to working directory. This is specifically for xls format.
-# fileIn <- file.choose(new = FALSE)
-
-# Elem2 <- read_xls(paste0(fileIn), col_names = TRUE, na = c("void", "VOID"), col_types = NULL)
- 
-# Choose all csv files from Repository DB located in the Data folder of the working directory
-# lfiles <- list.files("./Data/", pattern = "*.csv", full.names = TRUE)
-# atlist <- vector("list", length(lfiles))
-# n <- 1
-# for (f in lfiles) {
-#     df <- read.csv(f, stringsAsFactors = FALSE)[,-1]
-# 
-#     atlist[[n]] <- df
-#     n <- n+1
-# }
-# 
-#  Elem2 <- bind_rows(atlist)
-#  Elem2 <- Elem2 %>% select(!(...36))
-
-source("//deqlab1/bayres/R/Projects/R Training/RepositoryPull.R")
-# source("//deqlab1/bayres/R/Projects/R Training/RepositoryUpdate.R")
+ifelse(d == "REPO", source("./PullREPOData.R"),
+       ifelse(d == "AQS", source("./PullAQSData.R"),
+              ifelse(d == "XLS", source("./PullXLSData.R"))))
 
 save.image("E:/R/Projects/R Training/all_data.RData")
 
- # Sets Working Directory
-setwd("S:/Air Toxics/Air Toxics 12-24/")
-
 # Make a copy and work from. Start here if there is a mistake in the below coding.
-Elem <- Repo
+Elem <- DEQdf
 
 # class(Elem$tResult)
 # Filters to remove duplicate rows, Voided samples and comments
