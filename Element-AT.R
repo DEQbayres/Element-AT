@@ -1,5 +1,5 @@
 # Pull big table from Repo to here. Some Tiers are not following all the way through.
-# Maybe bind big table just before graphs or just before Elem3 defs
+# Maybe bind big table just before graphs or just before DEQdf3 defs
 
 library(ggplot2)
 library(lubridate)
@@ -26,126 +26,124 @@ ifelse(d == "REPO", source("./PullREPOData.R"),
 save.image("E:/R/Projects/R Training/all_data.RData")
 
 # Make a copy and work from. Start here if there is a mistake in the below coding.
-Elem <- DEQdf
+DEQdf <- Elem
 
-# class(Elem$tResult)
+# class(DEQdf$tResult)
 # Filters to remove duplicate rows, Voided samples and comments
-Elem <- Elem %>% distinct()
-Elem <- Elem[!grepl("Void", Elem$Result),]
-Elem <- Elem[!grepl("ZZZ", Elem$Project),]
-Elem <- Elem[!grepl("Blank", Elem$SampleType),]
-Elem <- Elem[!grepl("Predeployment", Elem$Project),]
-Elem <- Elem[!grepl("Special", Elem$Project),]
-Elem <- Elem[!grepl("McMinnville", Elem$Project),]
-Elem <- Elem[!grepl("LRAPA", Elem$Project),]
-Elem <- Elem[!grepl("Study", Elem$Project),]
-Elem <- Elem[!grepl("Acetone", Elem$Analyte),]
-Elem <- Elem[!grepl("Isopropanol", Elem$Analyte),]
-Elem <- Elem[!grepl("n-Hexane", Elem$Analyte),]
-Elem <- Elem[!grepl("pptv", Elem$Units),]
-Elem <- Elem[!grepl("Speciation", Elem$Matrix),]
-Elem <- Elem[!grepl("XRF", Elem$Analysis),]
-Elem <- Elem[!grepl("Southeast Lafayette", Elem$Project),]
+DEQdf <- DEQdf %>% distinct()
+DEQdf <- DEQdf[!grepl("Void", DEQdf$Result),]
+DEQdf <- DEQdf[!grepl("ZZZ", DEQdf$Project),]
+DEQdf <- DEQdf[!grepl("Blank", DEQdf$SampleType),]
+DEQdf <- DEQdf[!grepl("Predeployment", DEQdf$Project),]
+DEQdf <- DEQdf[!grepl("Special", DEQdf$Project),]
+DEQdf <- DEQdf[!grepl("McMinnville", DEQdf$Project),]
+DEQdf <- DEQdf[!grepl("LRAPA", DEQdf$Project),]
+DEQdf <- DEQdf[!grepl("Study", DEQdf$Project),]
+DEQdf <- DEQdf[!grepl("Acetone", DEQdf$Analyte),]
+DEQdf <- DEQdf[!grepl("Isopropanol", DEQdf$Analyte),]
+DEQdf <- DEQdf[!grepl("n-Hexane", DEQdf$Analyte),]
+DEQdf <- DEQdf[!grepl("pptv", DEQdf$Units),]
+DEQdf <- DEQdf[!grepl("Speciation", DEQdf$Matrix),]
+DEQdf <- DEQdf[!grepl("XRF", DEQdf$Analysis),]
+DEQdf <- DEQdf[!grepl("Southeast Lafayette", DEQdf$Project),]
 
-Elem$Yr <- year(Elem$Sampled)
+DEQdf$Yr <- year(DEQdf$Sampled)
 
-Elem <- Elem %>% 
+DEQdf <- DEQdf %>% 
           mutate(qtr = quarter(Sampled, with_year = T)) %>%
           arrange(Sampled, Project, SpecificMethod, Analyte)
 
 # Remove data below B grade
-Elem <- Elem[!grepl("C|D|F", Elem$DQL),]
+DEQdf <- DEQdf[!grepl("C|D|F", DEQdf$DQL),]
 
 
 # Remove rows with specific criteria, ex. Blanks
- Elem <- Elem[!(Elem$SampleType=="Pre-deployment Check" | Elem$Project=="Special Projects" | Elem$Project=="Sample Media Lot Blanks"),]
- Elem <- Elem[!(Elem$Project=="Predeployment Equipment Check" | Elem$Project=="Project" | Elem$SampleType=="Blank - Equipment"),]
- Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
+ DEQdf <- DEQdf[!(DEQdf$SampleType=="Pre-deployment Check" | DEQdf$Project=="Special Projects" | DEQdf$Project=="Sample Media Lot Blanks"),]
+ DEQdf <- DEQdf[!(DEQdf$Project=="Predeployment Equipment Check" | DEQdf$Project=="Project" | DEQdf$SampleType=="Blank - Equipment"),]
+ DEQdf <- DEQdf[rowSums(is.na(DEQdf)) != ncol(DEQdf),]
  
- Elem2 <- Elem
- Elem <- Elem2
+ DEQdf2 <- DEQdf
+ DEQdf <- DEQdf2
 
 # Make new value named "Location" from the column named "Project" and choose one or multiple sites (with CTRL or Shift)
 # Assign integer values to the locations (sites) you chose
-YrRange <- as.character(unique(Elem$Yr))
+YrRange <- as.character(unique(DEQdf$Yr))
 v <- select.list(YrRange, preselect = NULL, multiple = T, title = "Date Range? Hold Shift or Ctrl for multiple", graphics = TRUE)
 
-Elem <- Elem[Elem$Yr %in% v,]
-Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
+DEQdf <- DEQdf[DEQdf$Yr %in% v,]
+DEQdf <- DEQdf[rowSums(is.na(DEQdf)) != ncol(DEQdf),]
  
-Location <- unique(Elem$Project)
+Location <- unique(DEQdf$Project)
 x <- select.list(Location, preselect = NULL, multiple = T, title = "Locations? Hold SHIFT or CTRL for multiple",  graphics = TRUE)
 
-#ByDate <- unique(Elem$Sampled)
+#ByDate <- unique(DEQdf$Sampled)
 #g <- select.list("ByDate", preselect = NULL, multiple = T, title = "Testing Dates", graphics = TRUE)
 
 # Remove all rows of data that are NOT at a site you chose
-Elem <- Elem[Elem$Project %in% x,]
-Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
+DEQdf <- DEQdf[DEQdf$Project %in% x,]
+DEQdf <- DEQdf[rowSums(is.na(DEQdf)) != ncol(DEQdf),]
 
 # Make new value named "Method" from the column named "SpecificMethod" and choose multiple Methods (with CTRL or Shift)
-Method <- unique(Elem$SpecificMethod)
+Method <- unique(DEQdf$SpecificMethod)
 y <- select.list(Method, preselect = NULL, multiple = T, title = "Method? Hold SHIFT or CTRL for multiple",  graphics = TRUE)
 
 # Remove all data that are NOT at an analysis method you chose
-Elem <- Elem[Elem$SpecificMethod %in% y,]
-Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
+DEQdf <- DEQdf[DEQdf$SpecificMethod %in% y,]
+DEQdf <- DEQdf[rowSums(is.na(DEQdf)) != ncol(DEQdf),]
 
 # Pick Tiers of data to be used
-HAPTier <- unique(Elem$Tier)
+HAPTier <- unique(DEQdf$Tier)
 w <- select.list(HAPTier, preselect = NULL, multiple = T, title = "Tier? Hold SHIFT or CTRL for multiple", graphics = TRUE)
 
 # Remove all data that are NOT in the Tier class chosen
-Elem <- Elem[Elem$Tier %in% w,]
-Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
+DEQdf <- DEQdf[DEQdf$Tier %in% w,]
+DEQdf <- DEQdf[rowSums(is.na(DEQdf)) != ncol(DEQdf),]
 
 # Make new value named "Pollutant" from the column named "Analyte" and choose multiple pollutants (with CTRL or Shift)
-Pollutant <- unique(Elem$Analyte)
+Pollutant <- unique(DEQdf$Analyte)
 z <- select.list(Pollutant, preselect = NULL, multiple = T, title = "Pollutant? Hold SHIFT or CTRL for multiple",  graphics = TRUE)
 
 # Remove all data that are NOT a pollutant you chose
-Elem <- Elem[Elem$Analyte  %in% z,]
-Elem <- Elem[rowSums(is.na(Elem)) != ncol(Elem),]
+DEQdf <- DEQdf[DEQdf$Analyte  %in% z,]
+DEQdf <- DEQdf[rowSums(is.na(DEQdf)) != ncol(DEQdf),]
 
 # Making a list to choose how to color the scatter plot points
-Legend <- colnames(Elem)
+Legend <- colnames(DEQdf)
 i <- menu(Legend, graphics = TRUE, title = "Reference Color?")
 
 legend <- Legend[i]
-Test2 <- unique(Elem[[i]])
+Test2 <- unique(DEQdf[[i]])
 
-Elem3 <- Elem
+DEQdf3 <- DEQdf
 
-Elem3$CancerRisk = Elem3$uResult/Elem3$Cancer_Risk_ABC*100
-Elem3$NonCancerRisk = Elem3$uResult/Elem3$NonCancer_Risk_ABC*100
-Elem3$AcuteNonCancerRisk = Elem3$uResult/Elem3$Acute_NonCancer_Risk_ABC*100
+DEQdf3$CancerRisk = DEQdf3$uResult/DEQdf3$Cancer_Risk_ABC*100
+DEQdf3$NonCancerRisk = DEQdf3$uResult/DEQdf3$NonCancer_Risk_ABC*100
+DEQdf3$AcuteNonCancerRisk = DEQdf3$uResult/DEQdf3$Acute_NonCancer_Risk_ABC*100
 
-
-
-Elem %>%
+DEQdf %>%
   group_by(SampleType) %>%
   summarize(n = n())
 # legend <- Legend[i]
-# Test2 <- unique(Elem[[i]])
+# Test2 <- unique(DEQdf[[i]])
 
-yrsamp <- (unique(year(Elem3$Sampled)))
+yrsamp <- (unique(year(DEQdf3$Sampled)))
 yrfirst <- as.character(yrsamp[1])
 yrfinal <- as.character(yrsamp[length(yrsamp)])
-tiern <- as.character(Elem3$Tier[1])
+tiern <- as.character(DEQdf3$Tier[1])
 
 # Calculate Annual average
-Elem4 <- Elem3 %>%
+DEQdf4 <- DEQdf3 %>%
   group_by(Project, Yr, Analyte, Cancer_Risk_ABC, NonCancer_Risk_ABC) %>%
   summarize(mean = mean(uResult, na.rm=T))
 
 # Take month/year and expected number of samples
 
-ggplot(Elem4, aes(Yr, mean, colour = interaction(Project, Analyte))) + geom_point(size = 2)
+ggplot(DEQdf4, aes(Yr, mean, colour = interaction(Project, Analyte))) + geom_point(size = 2)
 
 # Uncomment for box/whisker graph
-#location <- ggplot(Elem, aes(x = Analyte, y = uResult, fill = Elem[[i]])) +
+#location <- ggplot(DEQdf, aes(x = Analyte, y = uResult, fill = DEQdf[[i]])) +
 #  ggtitle("KPM Determination")
-whisplot1 <- ggplot(Elem3, aes(x = Analyte, y = CancerRisk, fill = Elem3[[i]]))
+whisplot1 <- ggplot(DEQdf3, aes(x = Analyte, y = CancerRisk, fill = DEQdf3[[i]]))
 whisplot1 +
   ggtitle(paste("Tier", tiern, "HAP \nCancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
   theme(panel.background = element_rect(fill = 'white'),
@@ -173,8 +171,8 @@ whisplot1 +
 # geom_hline(yintercept=c(0.00023), linetype='solid', color=c('orange'), size = 2) + 
   # geom_hline(yintercept=c(0.00008), linetype='solid', color=c('red'), size = 2) 
 #location +
-  # geom_hline(yintercept=Elem$NonCancer_Risk_ABC, colour = 'red', size = 2)
-whisplot2 <- ggplot(Elem3, aes(x = Analyte, y = NonCancerRisk, fill = Elem3[[i]]))
+  # geom_hline(yintercept=DEQdf$NonCancer_Risk_ABC, colour = 'red', size = 2)
+whisplot2 <- ggplot(DEQdf3, aes(x = Analyte, y = NonCancerRisk, fill = DEQdf3[[i]]))
 whisplot2 +
   ggtitle(paste("Tier", tiern, "HAP \nNon-Cancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
   theme(panel.background = element_rect(fill = 'white'),
@@ -197,7 +195,7 @@ whisplot2 +
 # fltp <- paste(savefile, "pdf", sep = ".")
 # ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
 
-whisplot3 <- ggplot(Elem3, aes(x = Analyte, y = AcuteNonCancerRisk, fill = Elem3[[i]]))
+whisplot3 <- ggplot(DEQdf3, aes(x = Analyte, y = AcuteNonCancerRisk, fill = DEQdf3[[i]]))
 whisplot3 +
   ggtitle(paste("Tier", tiern, "HAP \nAcute Non-Cancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
   theme(panel.background = element_rect(fill = 'white'),
@@ -221,7 +219,7 @@ whisplot3 +
 # ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
 
   # Add horizontal lines for TRVs See \\deqlab1\AQM\Air Toxics\Benchmarks\340-245-8010.pdf for those TRV
-# location <- ggplot(Elem, aes(x = Analyte, y = uResult, fill = Elem[[i]])) +
+# location <- ggplot(DEQdf, aes(x = Analyte, y = uResult, fill = DEQdf[[i]])) +
 #  location #+
 #  guides(fill=guide_legend(title="Analyte"))
 
@@ -246,8 +244,8 @@ whisplot3 +
 
 # Uncomment for simple time vs concentration graph. uResult is all in micrograms. Result is in the reportable units like ppbv
 
-pointplot <- ggplot(Elem3, aes(Sampled, uResult, colour = Analyte))
-pointplot + geom_point(size = 2) + facet_wrap(~Elem3[[i]]) +
+pointplot <- ggplot(DEQdf3, aes(Sampled, uResult, colour = Analyte))
+pointplot + geom_point(size = 2) + facet_wrap(~DEQdf3[[i]]) +
   ggtitle(paste("Tier", tiern, "HAP \nTime Series"), subtitle = paste(yrfirst,"-",yrfinal)) +
   theme(panel.background = element_rect(fill = 'white'),
         panel.grid.major = element_line(color = 'grey'),
@@ -266,7 +264,7 @@ pointplot + geom_point(size = 2) + facet_wrap(~Elem3[[i]]) +
 # fltp <- paste(savefile, "pdf", sep = ".")
 # ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
 
-Annual <- Elem3 %>% group_by(Project, Analyte, Yr, Cancer_Risk_ABC, NonCancer_Risk_ABC, Acute_NonCancer_Risk_ABC) %>% summarise(mean(uResult))
+Annual <- DEQdf3 %>% group_by(Project, Analyte, Yr, Cancer_Risk_ABC, NonCancer_Risk_ABC, Acute_NonCancer_Risk_ABC) %>% summarise(mean(uResult))
 
 AnCR <- ggplot(Annual, aes(Yr, `mean(uResult)`, color = Analyte)) + geom_point(size = 2) + facet_wrap(~Project) +
   geom_hline(aes(yintercept=Cancer_Risk_ABC, colour=Analyte), linewidth = 1) +
