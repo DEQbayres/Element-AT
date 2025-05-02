@@ -112,7 +112,6 @@ Legend <- colnames(DEQdf)
 i <- menu(Legend, graphics = TRUE, title = "Reference Color?")
 
 legend <- Legend[i]
-Test2 <- unique(DEQdf[[i]])
 
 DEQdf3 <- DEQdf
 
@@ -123,8 +122,6 @@ DEQdf3$AcuteNonCancerRisk = DEQdf3$uResult/DEQdf3$Acute_NonCancer_Risk_ABC*100
 DEQdf %>%
   group_by(SampleType) %>%
   summarize(n = n())
-# legend <- Legend[i]
-# Test2 <- unique(DEQdf[[i]])
 
 yrsamp <- (unique(year(DEQdf3$Sampled)))
 yrfirst <- as.character(yrsamp[1])
@@ -141,8 +138,7 @@ DEQdf4 <- DEQdf3 %>%
 ggplot(DEQdf4, aes(Yr, mean, colour = interaction(Project, Analyte))) + geom_point(size = 2)
 
 # Uncomment for box/whisker graph
-#location <- ggplot(DEQdf, aes(x = Analyte, y = uResult, fill = DEQdf[[i]])) +
-#  ggtitle("KPM Determination")
+
 whisplot1 <- ggplot(DEQdf3, aes(x = Analyte, y = CancerRisk, fill = DEQdf3[[i]]))
 whisplot1 +
   ggtitle(paste("Tier", tiern, "HAP \nCancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
