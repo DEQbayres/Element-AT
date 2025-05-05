@@ -25,7 +25,9 @@ ifelse(d == "REPO", source("./PullREPOData.R"),
 
 save.image("E:/R/Projects/R Training/all_data.RData")
 
-# Make a copy and work from. Start here if there is a mistake in the below coding.
+# Make a copy and work from. 
+Elem <- DEQdf
+# Start here if there is a mistake in the below coding
 DEQdf <- Elem
 
 # class(DEQdf$tResult)
@@ -132,10 +134,17 @@ tiern <- as.character(DEQdf3$Tier[1])
 DEQdf4 <- DEQdf3 %>%
   group_by(Project, Yr, Analyte, Cancer_Risk_ABC, NonCancer_Risk_ABC) %>%
   summarize(mean = mean(uResult, na.rm=T))
+DEQdf4$CRisk <- DEQdf4$mean / DEQdf4$Cancer_Risk_ABC * 100
+DEQdf4$NCRisk <- DEQdf4$mean / DEQdf4$NonCancer_Risk_ABC * 100
+
 
 # Take month/year and expected number of samples
 
-ggplot(DEQdf4, aes(Yr, mean, colour = interaction(Project, Analyte))) + geom_point(size = 2)
+ggplot(DEQdf4, aes(Yr, mean, colour =  Analyte)) + 
+  geom_point(size = 2)
+
+ggplot(DEQdf4, aes(Yr, mean, colour =  Project)) + 
+  geom_point(size = 2)
 
 # Uncomment for box/whisker graph
 
