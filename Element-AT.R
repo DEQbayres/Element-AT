@@ -27,8 +27,6 @@ save.image("E:/R/Projects/R Training/all_data.RData")
 
 # Make a copy and work from. 
 Elem <- DEQdf
-# Start here if there is a mistake in the below coding
-DEQdf <- Elem
 
 # class(DEQdf$tResult)
 # Filters to remove duplicate rows, Voided samples and comments
@@ -63,8 +61,12 @@ DEQdf <- DEQdf[!grepl("C|D|F", DEQdf$DQL),]
  DEQdf <- DEQdf[!(DEQdf$SampleType=="Pre-deployment Check" | DEQdf$Project=="Special Projects" | DEQdf$Project=="Sample Media Lot Blanks"),]
  DEQdf <- DEQdf[!(DEQdf$Project=="Predeployment Equipment Check" | DEQdf$Project=="Project" | DEQdf$SampleType=="Blank - Equipment"),]
  DEQdf <- DEQdf[rowSums(is.na(DEQdf)) != ncol(DEQdf),]
- 
+
+ # Make backup of df before moving on
  DEQdf2 <- DEQdf
+
+ 
+ # Use backup instead of pulling data again. Start here to re-run code
  DEQdf <- DEQdf2
 
 # Make new value named "Location" from the column named "Project" and choose one or multiple sites (with CTRL or Shift)
@@ -141,10 +143,18 @@ DEQdf4$NCRisk <- DEQdf4$mean / DEQdf4$NonCancer_Risk_ABC * 100
 # Take month/year and expected number of samples
 
 ggplot(DEQdf4, aes(Yr, mean, colour =  Analyte)) + 
-  geom_point(size = 2)
+  geom_point(size = 2) +
+  facet_wrap(~Project)
 
-ggplot(DEQdf4, aes(Yr, mean, colour =  Project)) + 
-  geom_point(size = 2)
+ggplot(DEQdf4, aes(Yr, CRisk, colour =  Analyte)) + 
+  geom_point(size = 2) +
+  ggtitle(paste("HAP \nCancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
+  facet_wrap(~Project)
+
+ggplot(DEQdf4, aes(Yr, NCRisk, colour =  Analyte)) + 
+  geom_point(size = 2) +
+  ggtitle(paste("HAP \nNonCancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
+  facet_wrap(~Project)
 
 # Uncomment for box/whisker graph
 
