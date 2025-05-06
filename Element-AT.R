@@ -23,10 +23,11 @@ ifelse(d == "REPO", source("./PullREPOData.R"),
        ifelse(d == "AQS", source("./PullAQSData.R"),
               ifelse(d == "XLS", source("./PullXLSData.R"))))
 
-save.image("E:/R/Projects/R Training/all_data.RData")
-
 # Make a copy and work from. 
 Elem <- DEQdf
+
+ # Save the df in the Environment Tab in the default working directory
+save.image("E:/R/Projects/R Training/all_data.RData")
 
 # class(DEQdf$tResult)
 # Filters to remove duplicate rows, Voided samples and comments
