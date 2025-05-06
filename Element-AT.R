@@ -1,5 +1,5 @@
 # Pull big table from Repo to here. Some Tiers are not following all the way through.
-# Maybe bind big table just before graphs or just before DEQdf3 defs
+# Maybe bind big table just before graphs or just before DEQdf2 defs
 
 library(ggplot2)
 library(lubridate)
@@ -24,7 +24,7 @@ ifelse(d == "REPO", source("./PullREPOData.R"),
               ifelse(d == "XLS", source("./PullXLSData.R"))))
 
 # Make a copy and work from. 
-Elem <- DEQdf
+DEQdf4 <- DEQdf
 
  # Save the df in the Environment Tab in the default working directory
 save.image("E:/R/Projects/R Training/all_data.RData")
@@ -62,13 +62,6 @@ DEQdf <- DEQdf[!grepl("C|D|F", DEQdf$DQL),]
  DEQdf <- DEQdf[!(DEQdf$SampleType=="Pre-deployment Check" | DEQdf$Project=="Special Projects" | DEQdf$Project=="Sample Media Lot Blanks"),]
  DEQdf <- DEQdf[!(DEQdf$Project=="Predeployment Equipment Check" | DEQdf$Project=="Project" | DEQdf$SampleType=="Blank - Equipment"),]
  DEQdf <- DEQdf[rowSums(is.na(DEQdf)) != ncol(DEQdf),]
-
- # Make backup of df before moving on
- DEQdf2 <- DEQdf
-
- 
- # Use backup instead of pulling data again. Start here to re-run code
- DEQdf <- DEQdf2
 
 # Make new value named "Location" from the column named "Project" and choose one or multiple sites (with CTRL or Shift)
 # Assign integer values to the locations (sites) you chose
@@ -118,48 +111,48 @@ i <- menu(Legend, graphics = TRUE, title = "Reference Color?")
 
 legend <- Legend[i]
 
-DEQdf3 <- DEQdf
+DEQdf2 <- DEQdf
 
-DEQdf3$CancerRisk = DEQdf3$uResult/DEQdf3$Cancer_Risk_ABC*100
-DEQdf3$NonCancerRisk = DEQdf3$uResult/DEQdf3$NonCancer_Risk_ABC*100
-DEQdf3$AcuteNonCancerRisk = DEQdf3$uResult/DEQdf3$Acute_NonCancer_Risk_ABC*100
+DEQdf2$CancerRisk = DEQdf2$uResult/DEQdf2$Cancer_Risk_ABC*100
+DEQdf2$NonCancerRisk = DEQdf2$uResult/DEQdf2$NonCancer_Risk_ABC*100
+DEQdf2$AcuteNonCancerRisk = DEQdf2$uResult/DEQdf2$Acute_NonCancer_Risk_ABC*100
 
 DEQdf %>%
   group_by(SampleType) %>%
   summarize(n = n())
 
-yrsamp <- (unique(year(DEQdf3$Sampled)))
+yrsamp <- (unique(year(DEQdf2$Sampled)))
 yrfirst <- as.character(yrsamp[1])
 yrfinal <- as.character(yrsamp[length(yrsamp)])
-tiern <- as.character(DEQdf3$Tier[1])
+tiern <- as.character(DEQdf2$Tier[1])
 
 # Calculate Annual average
-DEQdf4 <- DEQdf3 %>%
+DEQdf3 <- DEQdf2 %>%
   group_by(Project, Yr, Analyte, Cancer_Risk_ABC, NonCancer_Risk_ABC) %>%
   summarize(mean = mean(uResult, na.rm=T))
-DEQdf4$CRisk <- DEQdf4$mean / DEQdf4$Cancer_Risk_ABC * 100
-DEQdf4$NCRisk <- DEQdf4$mean / DEQdf4$NonCancer_Risk_ABC * 100
+DEQdf3$CRisk <- DEQdf3$mean / DEQdf3$Cancer_Risk_ABC * 100
+DEQdf3$NCRisk <- DEQdf3$mean / DEQdf3$NonCancer_Risk_ABC * 100
 
 
 # Take month/year and expected number of samples
 
-ggplot(DEQdf4, aes(Yr, mean, colour =  Analyte)) + 
+ggplot(DEQdf3, aes(Yr, mean, colour =  Analyte)) + 
   geom_point(size = 2) +
   facet_wrap(~Project)
 
-ggplot(DEQdf4, aes(Yr, CRisk, colour =  Analyte)) + 
+ggplot(DEQdf3, aes(Yr, CRisk, colour =  Analyte)) + 
   geom_point(size = 2) +
   ggtitle(paste("HAP \nCancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
   facet_wrap(~Project)
 
-ggplot(DEQdf4, aes(Yr, NCRisk, colour =  Analyte)) + 
+ggplot(DEQdf3, aes(Yr, NCRisk, colour =  Analyte)) + 
   geom_point(size = 2) +
   ggtitle(paste("HAP \nNonCancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
   facet_wrap(~Project)
 
 # Uncomment for box/whisker graph
 
-whisplot1 <- ggplot(DEQdf3, aes(x = Analyte, y = CancerRisk, fill = DEQdf3[[i]]))
+whisplot1 <- ggplot(DEQdf2, aes(x = Analyte, y = CancerRisk, fill = DEQdf2[[i]]))
 whisplot1 +
   ggtitle(paste("Tier", tiern, "HAP \nCancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
   theme(panel.background = element_rect(fill = 'white'),
@@ -188,7 +181,7 @@ whisplot1 +
   # geom_hline(yintercept=c(0.00008), linetype='solid', color=c('red'), size = 2) 
 #location +
   # geom_hline(yintercept=DEQdf$NonCancer_Risk_ABC, colour = 'red', size = 2)
-whisplot2 <- ggplot(DEQdf3, aes(x = Analyte, y = NonCancerRisk, fill = DEQdf3[[i]]))
+whisplot2 <- ggplot(DEQdf2, aes(x = Analyte, y = NonCancerRisk, fill = DEQdf2[[i]]))
 whisplot2 +
   ggtitle(paste("Tier", tiern, "HAP \nNon-Cancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
   theme(panel.background = element_rect(fill = 'white'),
@@ -211,7 +204,7 @@ whisplot2 +
 # fltp <- paste(savefile, "pdf", sep = ".")
 # ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
 
-whisplot3 <- ggplot(DEQdf3, aes(x = Analyte, y = AcuteNonCancerRisk, fill = DEQdf3[[i]]))
+whisplot3 <- ggplot(DEQdf2, aes(x = Analyte, y = AcuteNonCancerRisk, fill = DEQdf2[[i]]))
 whisplot3 +
   ggtitle(paste("Tier", tiern, "HAP \nAcute Non-Cancer Risk"), subtitle = paste(yrfirst,"-",yrfinal)) +
   theme(panel.background = element_rect(fill = 'white'),
@@ -260,8 +253,8 @@ whisplot3 +
 
 # Uncomment for simple time vs concentration graph. uResult is all in micrograms. Result is in the reportable units like ppbv
 
-pointplot <- ggplot(DEQdf3, aes(Sampled, uResult, colour = Analyte))
-pointplot + geom_point(size = 2) + facet_wrap(~DEQdf3[[i]]) +
+pointplot <- ggplot(DEQdf2, aes(Sampled, uResult, colour = Analyte))
+pointplot + geom_point(size = 2) + facet_wrap(~DEQdf2[[i]]) +
   ggtitle(paste("Tier", tiern, "HAP \nTime Series"), subtitle = paste(yrfirst,"-",yrfinal)) +
   theme(panel.background = element_rect(fill = 'white'),
         panel.grid.major = element_line(color = 'grey'),
@@ -280,7 +273,7 @@ pointplot + geom_point(size = 2) + facet_wrap(~DEQdf3[[i]]) +
 # fltp <- paste(savefile, "pdf", sep = ".")
 # ggsave(fltp, units = c("cm"), width = 30, height = 16, device='pdf', dpi=700)
 
-Annual <- DEQdf3 %>% group_by(Project, Analyte, Yr, Cancer_Risk_ABC, NonCancer_Risk_ABC, Acute_NonCancer_Risk_ABC) %>% summarise(mean(uResult))
+Annual <- DEQdf2 %>% group_by(Project, Analyte, Yr, Cancer_Risk_ABC, NonCancer_Risk_ABC, Acute_NonCancer_Risk_ABC) %>% summarise(mean(uResult))
 
 AnCR <- ggplot(Annual, aes(Yr, `mean(uResult)`, color = Analyte)) + geom_point(size = 2) + facet_wrap(~Project) +
   geom_hline(aes(yintercept=Cancer_Risk_ABC, colour=Analyte), linewidth = 1) +
