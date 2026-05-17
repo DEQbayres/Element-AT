@@ -1,0 +1,1 @@
+This is a pet project of mine. It uses code to pull data from either AQS, Repository (if you have access) or a pregenerated XLS from Element. I use this for air toxics, but it can be modified to pull data from Envidas as well. I made this for comparing data from all of these sources. This code will allow the user to create custom data pulls for air toxics.
